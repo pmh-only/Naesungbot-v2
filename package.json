@@ -13,7 +13,7 @@
     "fs": "0.0.1-security",
     "http-errors": "^1.7.2",
     "https": "^1.0.0",
-    "jquery": "^3.4.1",
+    "jquery": "^3.5.0",
     "melon-chart-api": "^1.1.4",
     "morgan": "^1.9.1",
     "nanoid": "^2.0.3",
