@@ -1,6 +1,7 @@
 const Discord = require('discord.js');
 const melon = require('melon-chart-api');
 const config = require('../botsetting.json');
+const filehandler = require('../filehandler');
 const osu = require('node-osu');
 const api = new osu.Api(`${config.osu}`, {
     notFoundAsError: true,
@@ -14,20 +15,19 @@ let statuses = [`Operating!`, `Type n!help`, `Inquire to Naesung#5882`, `Refers 
 
 module.exports = {
     'ping': (msg, command) => {
-      msg.reply(":ping-pong:" + Math.round(client.ping) + "ms");
+      msg.reply(":ping_pong:" + Math.round(client.ws.ping) + "ms");
     },
     'info': (msg, command) => {
-      let infoembed = new Discord.RichEmbed();
+      let infoembed = new Discord.MessageEmbed()
         .setTitle(`Information of Naesungbot`)
         .setColor(`${config.color}`)
         .addField("Date", "2018년 7월 1일", true)
-        .addField("User", `${client.users.size}`, true)
-        .addField("Server", `${client.guilds.size}`, true)
-        .addField("Number of User", `${client.users.filter(a => a.bot === false).size}`, true)
-        .addField("Number of Bot", `${client.users.filter(a => a.bot === true).size}`, true)
+        .addField("User", `${client.users.cache.size}`, true)
+        .addField("Server", `${client.guilds.cache.size}`, true)
+        .addField("Number of User", `${client.users.cache.filter(a => a.bot === false).size}`, true)
+        .addField("Number of Bot", `${client.users.cache.filter(a => a.bot === true).size}`, true)
         .setTimestamp();
       msg.channel.send(infoembed);
-        }
     },
     'userinfo': (msg, command) => {
         let args = stringhandler.argsParse('userinfo', command);
@@ -42,7 +42,7 @@ module.exports = {
                 .addField('Creation Date:', user.createdAt);
             msg.channel.send(embed);
         }
-        let embed = new Discord.RichEmbed();
+        let embed = new Discord.MessageEmbed();
         if (args.length === 1) {
             let user = msg.author;
             senduserinfo(user);
@@ -54,7 +54,7 @@ module.exports = {
         }
     },
     'serverinfo': (msg, command) => {
-        let serverembed = new Discord.RichEmbed()
+        let serverembed = new Discord.MessageEmbed()
             .setDescription("Server Information")
             .setColor(`${config.color}`)
             .setThumbnail(msg.guild.iconURL)
@@ -62,21 +62,21 @@ module.exports = {
             .addField("Creation Date", msg.guild.createdAt)
             .addField("Join Date", msg.member.joinedAt)
             .addField("Number of Member", msg.guild.memberCount)
-            .addField("Role", msg.guild.roles.reduce((role, result) => result += role + ' '))
+            .addField("Role", msg.guild.roles.cache.cache.reduce((role, result) => result += role + ' '))
             .addField("Owner", msg.guild.owner)
-            .addField("Channel", msg.guild.channels.size)
+            .addField("Channel", msg.guild.channels.cache.size)
             .addField("ID", msg.guild.id);
         msg.channel.send(serverembed);
     },
     'botinfo': (msg, command) => {
         if (admin.check(msg.author.id)) {
-            let embed = new Discord.RichEmbed()
+            let embed = new Discord.MessageEmbed()
                 .setTitle(`Information of Naesungbot`)
                 .setColor(`${config.color}`)
-                .addField("User", `${client.users.size}`, true)
-                .addField("Server", `${client.guilds.size}`, true)
-                .addField("Number of User", `${client.users.filter(a => a.bot === false).size}`, true)
-                .addField("Number of Bot", `${client.users.filter(a => a.bot === true).size}`, true)
+                .addField("User", `${client.users.cache.size}`, true)
+                .addField("Server", `${client.guilds.cache.size}`, true)
+                .addField("Number of User", `${client.users.cache.filter(a => a.bot === false).size}`, true)
+                .addField("Number of Bot", `${client.users.cache.filter(a => a.bot === true).size}`, true)
                 .setTimestamp();
             msg.channel.send(embed)
         } else {
@@ -85,7 +85,7 @@ module.exports = {
     },
     'melon': (msg, command) => {
         let now = new Date();
-        let embed = new Discord.RichEmbed();
+        let embed = new Discord.MessageEmbed();
         now = (now.getMonth + 1) + '/' + now.getDate() + '/' + now.getFullYear;
         melon(now, { cutLine: 1 }).daily().then(res => {
             res.data.forEach(item => {
@@ -98,9 +98,9 @@ module.exports = {
     },
     'roleinfo': (msg, command) => {
         let args = stringhandler.argsParse('roleinfo', command);
-        let role = msg.mentions.roles.first() || msg.guild.roles.get(args[0]) || msg.guild.roles.find(role => role.name === args[0]);
-        if (!role) role = msg.member.highestRole;
-        let embed = new Discord.RichEmbed()
+        let role = msg.mentions.roles.first() || msg.guild.roles.cache.get(args[0]) || msg.guild.roles.cache.find(role => role.name === args[0]);
+        if (!role) role = msg.member.roles.highest;
+        let embed = new Discord.MessageEmbed()
             .setColor(role.hexColor)
             .setTitle(`역할: ${role.name}`)
             .addField('멤버', role.members.size)
@@ -113,7 +113,7 @@ module.exports = {
     },
     'hex': (msg, command) => {
         let color = ((1 << 24) * Math.random() | 0).toString(16);
-        let embed = new Discord.RichEmbed()
+        let embed = new Discord.MessageEmbed()
             .setTitle(`#${color}`)
             .setColor(`#${color}`);
         msg.channel.send({ embed: embed });
@@ -137,7 +137,7 @@ module.exports = {
             body = JSON.parse(body);
             if (body.result) {
                 if (body.temp && body.time) {
-                    let embed = new Discord.RichEmbed()
+                    let embed = new Discord.MessageEmbed()
                         .setColor(`${config.color}`)
                         .setTimestamp()
                         .setTitle("한강 물 온도")
@@ -151,16 +151,15 @@ module.exports = {
     },
     'osu': (msg, command) => {
         let username = stringhandler.argsParse('osu', command)[0];
-        if (!username[0]) return message.channel.send('osu닉네임을 적어주세요!');
+        if (!username[0]) return msg.channel.send('osu닉네임을 적어주세요!');
         api.getUser({ u: username }).then(user => {
-            const embed = new Discord.RichEmbed()
+            const embed = new Discord.MessageEmbed()
                 .setThumbnail(`http://s.ppy.sh/a/${user.id}`)
                 .setColor("#D0436A")
                 .addField('Name', user.name, true)
                 .addField('PP', Math.round(user.pp.raw), true)
                 .addField('Rank', user.pp.rank, true)
                 .addField('Level', Math.round(user.level), true)
-                .addBlankField()
                 .addField('Nation', user.country, true)
                 .addField('Rank in Nation', user.pp.countryRank, true)
                 .addField('Play', user.counts.plays, true)
@@ -183,7 +182,7 @@ module.exports = {
                 let url1 = `https://visage.surgeplay.com/full/512/${body.id}`;
                 let url2 = `https://visage.surgeplay.com/head/512/${body.id}`;
                 let url3 = `https://visage.surgeplay.com/face/512/${body.id}`;
-                let embed = new Discord.RichEmbed()
+                let embed = new Discord.MessageEmbed()
                     .setColor(`${config.color}`)
                     .setTimestamp()
                     .setAuthor(`${msg.author.username}`, url3)

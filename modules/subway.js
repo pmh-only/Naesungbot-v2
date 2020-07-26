@@ -10,7 +10,7 @@ const cheerio = require('cheerio');
 //beta 서비스입니다. 일단 규모가 적당한 부산광역시 대상.
 /*module.exports = {
   'busansub': (msg, command) => {
-    var InfoEmbed = new Discord.RichEmbed()
+    var InfoEmbed = new Discord.MessageEmbed()
             .setColor("#2fce64")
             .setTitle(`부산도시철도 알림봇`)
             .addField(`busansub : DM으로 도움 메시지를 보냅니다.`)
