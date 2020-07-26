@@ -14,7 +14,7 @@ module.exports = {
         function play(url) {
             ytdl.getInfo(url, {downloadURL: true}, (err, info) => {
                 if (err) throw err;
-                let embed = new Discord.RichEmbed()
+                let embed = new Discord.MessageEmbed()
                     .setTitle(info.title)
                     .setURL(url)
                     .addField(`동영상 길이`,`${info.length_seconds}초`)
@@ -26,13 +26,13 @@ module.exports = {
                 // embed.addField('설명', info.description, true); 이건 embed 1024자 넘으면 에러 떠서 안씁니다
                 msg.channel.send(embed);
             });
-            msg.member.voiceChannel.join().then(connection => {
+            msg.member.voice.channel.join().then(connection => {
                 let streamOptions = {seek: 0, volume: 1, bitrate: 64000};
                 const stream = ytdl(url, {filter: 'audioonly'});
                 const dispatcher = connection.playStream(stream, streamOptions);
                 dispatcher.on("end", end => {
                     msg.channel.send("노래가 끝났습니다!");
-                    msg.member.voiceChannel.leave();
+                    msg.member.voice.channel.leave();
                 });
             }).catch(err => console.log(err));
         }
@@ -40,7 +40,7 @@ module.exports = {
             let youtube = stringhandler.cutTextHead('play ', command);
             let link = `https://www.youtube.com/results?search_query=` + encodeURI(youtube);
             if (!youtube) return msg.reply(`Please enter a keyword.`);
-            let embed = new Discord.RichEmbed()
+            let embed = new Discord.MessageEmbed()
                 .setColor("RED")
                 .setTimestamp()
                 .addField('Action:', 'Searching on youtube')
@@ -50,8 +50,8 @@ module.exports = {
                 .setFooter("Your avatar", msg.author.avatarURL);
             msg.channel.send(embed);
         }
-        if (!msg.member.voiceChannel) return searchNoPlay();
-        if (msg.guild.me.voiceChannel) return msg.channel.send(`이미 ${msg.guild.me.voiceChannel}에서 노래를 하고 있습니다`);
+        if (!msg.member.voice.channel) return searchNoPlay();
+        if (msg.guild.me.voice.channel) return msg.channel.send(`이미 ${msg.guild.me.voice.channel}에서 노래를 하고 있습니다`);
         const raw = stringhandler.cutTextHead('play ', command);
         if (!raw) return msg.channel.send("인자가 없습니다.");
         let url = raw;
@@ -60,7 +60,7 @@ module.exports = {
             ytSearch(url, function (err, r) {
                 try {
                     function show(msg, count) {
-                        let embed = new Discord.RichEmbed()
+                        let embed = new Discord.MessageEmbed()
                             .setAuthor(`${msg.author.tag}`, msg.author.displayAvatarURL)
                             .setColor(`${config.color}`)
                             .setTitle(url + ' 검색 결과')
@@ -110,7 +110,7 @@ module.exports = {
     },
     'exit': (msg, command) => {
         try {
-            msg.member.voiceChannel.leave();
+            msg.member.voice.channel.leave();
         } catch (e) {
             
         }
@@ -123,7 +123,7 @@ module.exports = {
                 if (error) msg.reply(error);
                 else if (response.statusCode === 200) {
                     body = JSON.parse(body);
-                    let embed = new Discord.RichEmbed()
+                    let embed = new Discord.MessageEmbed()
                         .setAuthor(`${msg.author.tag}`, msg.author.displayAvatarURL)
                         .setColor(`${config.color}`)
                         .setTitle(body.title)
@@ -132,7 +132,7 @@ module.exports = {
                         .addField("정보", " by **" + body.user.username + "** *(" + Math.floor(body.duration / 1000) + " 초)* ")
                         .setFooter("#" + body.id);
                     msg.channel.send(embed);
-                    msg.member.voiceChannel.join().then(connection => {
+                    msg.member.voice.channel.join().then(connection => {
                         console.log(body.download_url + "?client_id=aGG0HvvLMMohiFsNq85gvca9MB6wAxHP");
                         https.get(body.download_url + "?client_id=aGG0HvvLMMohiFsNq85gvca9MB6wAxHP", (response) => {
                             if (response.statusCode !== 200) {
@@ -153,7 +153,7 @@ module.exports = {
                                 const dispatcher = connection.playFile('./sc/' + body.id + '.mp3', streamOptions);
                                 dispatcher.on("end", end => {
                                     msg.channel.send("노래가 끝났습니다!");
-                                    msg.member.voiceChannel.leave();
+                                    msg.member.voice.channel.leave();
                                 });
                             });
                         });

@@ -1,5 +1,7 @@
 const Discord = require('discord.js');
+const config = require('../botsetting.json');
 const stringhandler = require('../stringhandler');
+const snekfetch = require('snekfetch')
 const request = require('request');
 
 module.exports = {
@@ -12,7 +14,7 @@ module.exports = {
             }
             body = JSON.parse(body);
             if (body.url) {
-                let embed = new Discord.RichEmbed()
+                let embed = new Discord.MessageEmbed()
                     .setColor(`${config.color}`)
                     .setTimestamp()
                     .setImage(body.url);
@@ -29,7 +31,7 @@ module.exports = {
             }
             body = JSON.parse(body);
             if (body.url) {
-                let embed = new Discord.RichEmbed()
+                let embed = new Discord.MessageEmbed()
                     .setColor(`${config.color}`)
                     .setTimestamp()
                     .setImage(body.url);
@@ -41,7 +43,7 @@ module.exports = {
         let nike = stringhandler.cutTextHead('twitch', command);
         const api = `https://api.twitch.tv/kraken/channels/${nike}?client_id=h5otvowaukebe06barer212ljrbz9n`;
         snekfetch.get(api).then(r => {
-            let embed = new Discord.RichEmbed()
+            let embed = new Discord.MessageEmbed()
                 .setAuthor(
                     `${r.body.display_name}`,
                     `${r.body.logo}`,
@@ -61,7 +63,7 @@ module.exports = {
         let google = stringhandler.cutTextHead('google', command);
         let link = `https://www.google.com/search?q=` + encodeURI(google);
         if (!google) return msg.reply(`Please type a Keyword!`);
-        let embed = new Discord.RichEmbed()
+        let embed = new Discord.MessageEmbed()
             .setColor("White")
             .setTimestamp()
             .addField('Google Search:', 'Results Found!')
@@ -74,7 +76,7 @@ module.exports = {
         let naver = stringhandler.cutTextHead('naver', command);
         let link = `https://search.naver.com/search.naver?sm=top_hty&fbm=1&ie=utf8&query=` + encodeURI(naver);
         if (!naver) return msg.reply(`Please type a Keyword!`);
-        let embed = new Discord.RichEmbed()
+        let embed = new Discord.MessageEmbed()
             .setColor("GREEN")
             .setTimestamp()
             .addField('Naver Search:', 'Results Found!')
@@ -87,7 +89,7 @@ module.exports = {
         let daum = stringhandler.cutTextHead('daum', command);
         let link = `https://search.daum.net/search?w=tot&DA=YZR&t__nil_searchbox=btn&sug=&sugo=&q=` + encodeURI(daum);
         if (!daum) return msg.reply(`Please type a Keyword!`);
-        let embed = new Discord.RichEmbed()
+        let embed = new Discord.MessageEmbed()
             .setColor("Blue")
             .setTimestamp()
             .addField('Nate Search:', 'Results Found!')
@@ -100,7 +102,7 @@ module.exports = {
         let nate = stringhandler.cutTextHead('nate', command);
         let link = `https://search.daum.net/nate?thr=sbma&w=tot&q=` + encodeURI(nate);
         if (!nate) return msg.reply(`Please type a Keyword!`);
-        let embed = new Discord.RichEmbed()
+        let embed = new Discord.MessageEmbed()
             .setColor("RED")
             .setTimestamp()
             .addField('Nate Search:', 'Search Results Found!')
@@ -113,7 +115,7 @@ module.exports = {
         let duckduckgo = stringhandler.cutTextHead('duckduckgo', command);
         let link = `https://duckduckgo.com/?q=` + encodeURI(duckduckgo);
         if (!duckduckgo) return msg.reply(`Please type a Keyword!`);
-        let embed = new Discord.RichEmbed()
+        let embed = new Discord.MessageEmbed()
             .setColor("Yellow")
             .setTimestamp()
             .addField('DuckDuckgo Search:', 'Search Results Found!')
@@ -126,7 +128,7 @@ module.exports = {
         let namu = stringhandler.cutTextHead('namu', command);
         let link = `https://namu.wiki/w/` + encodeURI(namu);
         if (!namu) return msg.reply(`Please type a Keyword!`);
-        let embed = new Discord.RichEmbed()
+        let embed = new Discord.MessageEmbed()
             .setColor("Green")
             .setTimestamp()
             .addField('Namuwiki Search:', 'Search Results Found!')

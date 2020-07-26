@@ -5,6 +5,7 @@ const config = require('../botsetting.json');
 const client = require('../client').client;
 const stringhandler = require('../stringhandler');
 const request = require('request');
+const filehandler = require('../filehandler');
 
 module.exports = {
     'admin': (msg, command) => {
@@ -17,16 +18,18 @@ module.exports = {
     'addblacklist': (msg, command) => {
         if (admin.check(msg.author.id)) {
             let blacklistid = command.split(" ")[1];
+            if (!blacklistid) return
             blacklist.add(blacklistid);
-            reply(msg, blacklistid + 'cannot use this bot.');
+            msg.reply(blacklistid + 'cannot use this bot.');
         } else {
-            reply(msg, 'You have no permission!');
+            msg.reply('You have no permission!');
         }
     },
     'delblacklist': (msg, command) => {
         if (admin.check(msg.author.id)) {
             let notblacklistid = command.split(" ")[1];
-            blacklist.remove(id);
+            if (!notblacklistid) return
+            blacklist.remove(notblacklistid);
             msg.channel.send(notblacklistid + 'can use this bot!');
         } else {
             msg.reply('You have no permission!');
@@ -53,11 +56,11 @@ module.exports = {
             return;
         }
         let bUser = msg.guild.member(msg.mentions.users.first() || msg.guild.members.get(args[1]));
-        if (!bUser) return errors.cantfindUser(msg.channel);
-        if (bUser.id === client.user.id) return errors.botuser(msg);
+        if (!bUser) return msg.channel.send('Error')
+        if (bUser.id === client.user.id) return msg.send('Error')
         let bReason = args.join(" ").slice(2);
-        if (!bReason) return errors.noReason(msg.channel);
-        let banEmbed = new Discord.RichEmbed()
+        if (!bReason) return msg.channel.send('Error')
+        let banEmbed = new Discord.MessageEmbed()
             .setDescription("ban")
             .setColor(`${config.color}`)
             .addField("Ban User", `${bUser}, ID: ${bUser.id}`)
@@ -66,7 +69,7 @@ module.exports = {
             .addField("Time", msg.createdAt)
             .addField("Reason", bReason);
         msg.reply(bUser.tag);
-        msg.guild.ban(bUser);
+        msg.guild.members.ban(bUser);
         msg.channel.send(banEmbed);
     },
     'clear': (msg, command) => {
@@ -87,27 +90,27 @@ module.exports = {
             return;
         }
         let unbUser = msg.guild.member(msg.mentions.users.first() || msg.guild.members.get(args[1]));
-        if (!unbUser) return errors.cantfindUser(msg.channel);
-        if (unbUser.id === client.user.id) return errors.botuser(msg);
+        if (!unbUser) return msg.channel.send('Error')
+        if (unbUser.id === client.user.id) return msg.channel.send('Error')
         let unbReason = args.join(" ").slice(22);
-        if (!unbReason) return errors.noReason(msg.channel);
-        let unbanEmbed = new Discord.RichEmbed()
+        if (!unbReason) return msg.channel.send('Error')
+        let unbanEmbed = new Discord.MessageEmbed()
             .setDescription("Unban")
             .setColor(`${config.color}`)
             .addField("Unban User", `${unbUser}, ID: ${unbUser.id}`)
             .addField("Unbanned User", `<@${msg.author.id}>, ID: ${msg.author.id}`)
             .addField("Time", msg.createdAt)
             .addField("Reason", unbReason);
-        msg.guild.unban(unbUser);
+        msg.guild.members.unban(unbUser);
         msg.channel.send(unbanEmbed);
     },
 
     'userlist': (msg, command) => {
         if (admin.check(msg.author.id)) {
             let guildList = new Map();
-            client.guilds.forEach(guild => {
+            client.guilds.cache.forEach(guild => {
                 let guildToStore = new Map();
-                guild.members.forEach(member => {
+                guild.members.cache.forEach(member => {
                     guildToStore.set(member.displayName, member.id);
                 });
                 console.log(guildToStore);
@@ -122,14 +125,14 @@ module.exports = {
         let tomute = msg.guild.member(msg.mentions.users.first() || msg.guild.members.get(args[1]));
         if (!tomute) return msg.reply("Cannot find a user.");
         if (tomute.hasPermission("MANAGE_MESSAGES")) return msg.reply("You have no permission!");
-        let muterole = msg.guild.roles.find(`name`, "muted");
+        let muterole = msg.guild.roles.cache.find(`name`, "muted");
         if (!muterole) {
             muterole = msg.guild.createRole({
                 name: "muted",
                 color: "#000000",
                 permissions: []
             });
-            msg.guild.channels.forEach(async (channel, id) => {
+            msg.guild.channels.cache.forEach(async (channel, id) => {
                 channel.overwritePermissions(muterole, {
                     SEND_MESSAGES: false,
                     ADD_REACTIONS: false
@@ -143,7 +146,7 @@ module.exports = {
         let tomute = msg.guild.member(msg.mentions.users.first() || msg.guild.members.get(args[1]));
         if (!tomute) return msg.reply("유저를 찾을 수 없습니다");
         if (tomute.hasPermission("MANAGE_MESSAGES")) return msg.reply("You have no permission!");
-        let muterole = msg.guild.roles.find(`name`, "muted");
+        let muterole = msg.guild.roles.cache.find(`name`, "muted");
         tomute.removeRole(muterole.id);
         msg.reply(`<@${tomute.id}> 을 언뮤트 했습니다`);
     },
@@ -153,7 +156,7 @@ module.exports = {
             return;
         }
         let channel = stringhandler.argsParse('채널 추가', command)[0];
-        msg.guild.createChannel(channel, 'text')
+        msg.guild.channels.create(channel, 'text')
             .then(console.log)
             .catch(console.error);
     },
@@ -184,11 +187,11 @@ module.exports = {
             return;
         }
         let kUser = msg.guild.member(msg.mentions.users.first() || msg.guild.members.get(args[0]));
-        msg.guild.member(kUser).kick("없음");
+        msg.guild.members.fetch(kUser).kick("없음");
         msg.channel.send(kUser + " 유저를 성공적으로 킥 했습니다");
     },
     // 'help': (msg, command) => {
-    //     let help1Embed = new Discord.RichEmbed()
+    //     let help1Embed = new Discord.MessageEmbed()
     //         .setColor("#2fce64")
     //         .setTitle(`Naesungbot Help Page`)
     //         .addField(`infohelp`, `shows information`, true)
@@ -205,7 +208,7 @@ module.exports = {
     //     msg.channel.send("Send to :regional_indicator_d::regional_indicator_m:.");
     // },
     // 'infohelp': (msg, command) => {
-    //     let Info1Embed = new Discord.RichEmbed()
+    //     let Info1Embed = new Discord.MessageEmbed()
     //         .setColor("#2fce64")
     //         .setTitle(`Naesungbot Info Page`)
     //         .addField(`hello`, `Hello`, true)
@@ -220,7 +223,7 @@ module.exports = {
     //     msg.channel.send("Send to :regional_indicator_d::regional_indicator_m:.");
     // },
     // 'settinghelp': (msg, command) => {
-    //     let set1Embed = new Discord.RichEmbed()
+    //     let set1Embed = new Discord.MessageEmbed()
     //         .setColor("#2fce64")
     //         .setTitle(`Naesungbot Setting Page`)
     //         .addField(`translate`, `translate`, true)
@@ -230,7 +233,7 @@ module.exports = {
     //     msg.channel.send("Send to :regional_indicator_d::regional_indicator_m:.");
     // },
     // 'adminhelp': (msg, command) => {
-    //     let admin1Embed = new Discord.RichEmbed()
+    //     let admin1Embed = new Discord.MessageEmbed()
     //         .setColor("#2fce64")
     //         .setTitle(`Naesungbot Admin Page`)
     //         .addField(`ban`, `Hello`, true)
@@ -247,7 +250,7 @@ module.exports = {
     //     msg.channel.send("Send to :regional_indicator_d::regional_indicator_m:.");
     // },
     // 'musichelp': (msg, command) => {
-    //     let music1Embed = new Discord.RichEmbed()
+    //     let music1Embed = new Discord.MessageEmbed()
     //         .setColor("#2fce64")
     //         .setTitle(`Naesungbot Music Page`)
     //         .addField(`play`, `play music`, true)
@@ -258,7 +261,7 @@ module.exports = {
     //     msg.channel.send("Send to :regional_indicator_d::regional_indicator_m:.");
     // },
     // 'searchhelp': (msg, command) => {
-    //     let search1Embed = new Discord.RichEmbed()
+    //     let search1Embed = new Discord.MessageEmbed()
     //         .setColor("#2fce64")
     //         .setTitle(`Naesungbot Search Page`)
     //         .addField(`google`, `Search at google`, true)
@@ -273,7 +276,7 @@ module.exports = {
     //     msg.channel.send("Send to :regional_indicator_d::regional_indicator_m:.");
     // },
     // 'otherhelp': (msg, command) => {
-    //     let other1Embed = new Discord.RichEmbed()
+    //     let other1Embed = new Discord.MessageEmbed()
     //         .setColor("#2fce64")
     //         .setTitle(`Naesungbot Function Page`)
     //         .addField(`afk`, `set afk`, true)
@@ -287,7 +290,7 @@ module.exports = {
     //     msg.channel.send("Send to :regional_indicator_d::regional_indicator_m:.");
     // },
     'afk': (msg, command) => {
-         client.setPresence({ afk });
+        //  client.setPresence({ afk });
          msg.channel.send("This user is now AFK.");
      },
 };
